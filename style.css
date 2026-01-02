@@ -1,0 +1,45 @@
+/* Removemos as margens padrão do navegador para ocupar a tela toda */
+body {
+    margin: 0;
+    overflow: hidden; /* Impede barras de rolagem (scroll) */
+    background-color: #111; /* Fundo cinza bem escuro caso o 3D falhe */
+    font-family: sans-serif; /* Fonte padrão mais limpa */
+}
+
+/* O container do 3D deve ocupar 100% da largura (vw) e altura (vh) da tela */
+#container-canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+}
+
+/* Posicionamento do container dos botões */
+#container-interface {
+    position: absolute; /* Flutua sobre o canvas 3D */
+    top: 20px;          /* Distância do topo */
+    right: 20px;        /* Distância da direita */
+    z-index: 10;        /* Garante que fique "acima" do desenho 3D */
+}
+
+/* Estilo do Botão */
+button {
+    background-color: #ff3333; /* Vermelho */
+    color: white;              /* Texto branco */
+    border: none;              /* Sem borda padrão */
+    padding: 10px 20px;        /* Espaçamento interno */
+    font-size: 16px;           /* Tamanho da letra */
+    border-radius: 5px;        /* Bordas arredondadas */
+    cursor: pointer;           /* Mãozinha do mouse ao passar por cima */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* Sombra suave */
+    transition: background 0.3s; /* Animação suave ao mudar de cor */
+}
+
+/* Quando passar o mouse por cima do botão */
+button:hover {
+    background-color: #cc0000; /* Vermelho mais escuro */
+}
+
+/* Quando clicar no botão */
+button:active {
+    transform: scale(0.98); /* Diminui levemente para dar sensação de clique */
+}
