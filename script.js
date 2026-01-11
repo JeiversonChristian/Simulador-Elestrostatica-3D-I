@@ -3,50 +3,59 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// ==========================================
-// 1. CONFIGURAÇÃO INICIAL DA CENA (O MUNDO 3D)
-// ==========================================
+// =============================
+// CONFIGURAÇÃO INICIAL DA CENA
+// =============================
 
-// Cria a cena (o universo onde os objetos existem)
+// Cria a cena
 const cena = new THREE.Scene();
-cena.background = new THREE.Color(0x111111); // Cor de fundo: Cinza muito escuro
+// Cor de fundo
+cena.background = new THREE.Color(0x000000);
 
-// Cria a câmera (nossos olhos no mundo 3D)
+// Cria a câmera
 // Parâmetros: Campo de visão, Proporção da tela, Distância mínima, Distância máxima
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, 10); // Posiciona a câmera um pouco acima e atrás do centro
+const camera = new THREE.PerspectiveCamera(120, window.innerWidth / window.innerHeight, 0.1, 1000);
+// Posição da câmera
+camera.position.set(0, 0, 10);
 
 // Cria o renderizador (o motor que desenha na tela)
-const renderizador = new THREE.WebGLRenderer({ antialias: true }); // Antialias suaviza as bordas
-renderizador.setSize(window.innerWidth, window.innerHeight); // Define o tamanho igual à janela
+// Antialias suaviza as bordas
+const renderizador = new THREE.WebGLRenderer({ antialias: true }); 
+// Define o tamanho igual à janela
+renderizador.setSize(window.innerWidth, window.innerHeight); 
 // Adiciona o elemento do renderizador (canvas) dentro da nossa div no HTML
 document.getElementById('container-canvas').appendChild(renderizador.domElement);
 
 // Adiciona os Controles de Órbita (para girar e dar zoom com o mouse/dedo)
 const controles = new OrbitControls(camera, renderizador.domElement);
 controles.enableDamping = true; // Adiciona uma inércia suave ao movimento
-controles.dampingFactor = 0.05;
+controles.dampingFactor = 0.1;
 
 // ==========================================
-// 2. ILUMINAÇÃO
+// ILUMINAÇÃO
 // ==========================================
 
-// Luz Ambiente: Ilumina tudo por igual, sem sombras (como pedido)
-const luzAmbiente = new THREE.AmbientLight(0xffffff, 1.5); // Cor branca, Intensidade 1.5
+// Luz Ambiente: Ilumina tudo por igual, sem sombras
+// Cor branca, Intensidade 1.5
+const luzAmbiente = new THREE.AmbientLight(0xffffff, 1.5); 
 cena.add(luzAmbiente);
 
 // ==========================================
-// 3. OBJETOS: A CARGA ELÉTRICA
+// OBJETOS: A CARGA ELÉTRICA (UM PRÓTON)
 // ==========================================
 
 // Geometria: Formato de esfera
-const geometriaCarga = new THREE.SphereGeometry(1, 32, 32); 
+// SphereGeometry(Raio, SegmentosLargura, SegmentosAltura)
+// rp ≈ 0,841 x 10^-15 m
+const fator_escala_comprimento = 1e15;
+const rp = (0.84e-15) * fator_escala_comprimento;
+const geometriaCarga = new THREE.SphereGeometry(rp, 32, 32); 
 // Material: Cor vermelha sólida, não afetada por sombras
 const materialCarga = new THREE.MeshBasicMaterial({ color: 0xff0000 }); 
 // Mesh: A junção da geometria com o material
 const malhaCarga = new THREE.Mesh(geometriaCarga, materialCarga);
-
 // Adiciona a carga no centro da cena (0,0,0)
+malhaCarga.position.set(0, 0, 0);
 cena.add(malhaCarga);
 
 // ==========================================
@@ -59,13 +68,20 @@ const grupoCampo = new THREE.Group();
 cena.add(grupoCampo);
 
 function criarCampoEletrico() {
-    // --- DEFINIÇÃO DAS CONSTANTES FÍSICAS ---
-    // Nota: Para visualização em tela, usamos valores ajustados.
-    // Se usássemos valores reais (ex: 8.85 x 10^-12), as setas seriam invisíveis ou infinitas na escala da tela.
+    // ==========================================
+    // 1. CONSTANTES FÍSICAS REAIS (SISTEMA INTERNACIONAL)
+    // ==========================================
     
     const PI = Math.PI;
-    const permissividade = 1.0; // Valor simulado para 'ε' (Epsilon)
-    const cargaEletrica = 150.0; // Valor simulado para 'Q' (Carga)
+    // Permissividade Elétrica no Vácuo 
+    // ε0 ≈ 8,854 x 10^-12 F/m 
+    // (ou C^2/N . m^2)
+    const permissividade = 8.854e-12;
+    // const permissividade = 1.0;
+    // Carga Elementar (Carga do Próton) (e)
+    // e ≈ 1,602 x 10^-19 C
+    const cargaEletrica = 1.602e-19;
+    // const cargaEletrica = 150.0;
     
     // Configuração da "Grade" de vetores (onde vamos desenhar as setas)
     const espacamento = 2.5; // Distância entre cada seta
@@ -85,7 +101,7 @@ function criarCampoEletrico() {
                 const vetorPosicao = new THREE.Vector3(posX, posY, posZ);
                 
                 // Calcula a distância 'r' do ponto até o centro (0,0,0)
-                const distancia = vetorPosicao.length();
+                const distancia = (vetorPosicao.length());
 
                 // IMPEDIR DIVISÃO POR ZERO:
                 // Se a distância for muito pequena (dentro da carga), não desenhamos seta.
@@ -97,9 +113,10 @@ function criarCampoEletrico() {
                 // 1. O termo da constante Eletrostática (k)
                 const k = 1 / (4 * PI * permissividade);
 
+                const fator_escala_campo = 5e9;
                 // 2. O cálculo da magnitude (intensidade) do campo
                 // Magnitude = k * (Q / r²)
-                const magnitude = k * (cargaEletrica / (distancia * distancia));
+                const magnitude = (k * (cargaEletrica / (distancia * distancia)) ) * fator_escala_campo;
 
                 // --- VISUALIZAÇÃO ---
                 
